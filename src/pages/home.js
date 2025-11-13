@@ -1,24 +1,47 @@
 import { useState } from "react";
-import gitgif from "../assets/git.gif";  // add later!
+import gitgif from "../assets/git.gif";
+import { sendRepoUrlToN8N } from "../api/n8n";
 
 export default function Home() {
   const [url, setUrl] = useState("");
   const [status, setStatus] = useState(""); 
   const [showTooltip, setShowTooltip] = useState(false);
+  const [pdfUrl, setPdfUrl] = useState("");
+  const [docxUrl, setDocxUrl] = useState("");
 
-  const startReading = () => {
+  // when user clicks ENTER
+  const startReading = async () => {
     if (!url.trim()) return;
 
-    setStatus("reading");
+    setStatus("reading");   // show the gif popup
 
-    // Fake API delay – replace with real backend
-    setTimeout(() => {
+    try {
+      // ⬇️ send repo URL to n8n webhook
+      const data = await sendRepoUrlToN8N(url);
+
+      // ⬇️ Extract returned file URLs from n8n
+      setPdfUrl(data.pdfUrl || "");
+      setDocxUrl(data.docxUrl || data.wordUrl || "");
+
+      // show success popup
       setStatus("done");
-    }, 2000);
+    } catch (err) {
+      console.error(err);
+      setStatus("error");
+    }
   };
 
+  // when user clicks WORD/PDF button
   const downloadFile = (type) => {
     setStatus("download");
+
+    // real download file
+    const link = document.createElement("a");
+    link.href = type === "pdf" ? pdfUrl : docxUrl;
+    link.download = "";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
 
     setTimeout(() => {
       setStatus("downloaded");
@@ -69,9 +92,8 @@ export default function Home() {
       {/* POPUP STATES */}
       {status === "reading" && (
         <div className="mt-8 bg-white border rounded-xl shadow-lg p-6 w-[350px] text-center">
-          {/* Replace this with your GIF later */}
           <div className="w-full flex justify-center mb-2">
-            { <img src={gitgif} className="w-20" /> }
+            <img src={gitgif} className="w-20" alt="reading" />
           </div>
           <p>reading...</p>
         </div>
@@ -96,19 +118,25 @@ export default function Home() {
       )}
 
       {/* DOWNLOAD SECTION */}
-      <p className="mt-10">Click and Download </p>
+      <p className="mt-10">Click and Download ⬇️</p>
 
       <div className="flex gap-6 mt-4">
         <button
           onClick={() => downloadFile("word")}
-          className="bg-blue-900 text-white px-10 py-3 rounded-lg hover:bg-blue-800"
+          disabled={!docxUrl}
+          className={`px-10 py-3 rounded-lg text-white ${
+            docxUrl ? "bg-blue-900 hover:bg-blue-800" : "bg-blue-300 cursor-not-allowed"
+          }`}
         >
           WORD
         </button>
 
         <button
           onClick={() => downloadFile("pdf")}
-          className="bg-red-500 text-white px-10 py-3 rounded-lg hover:bg-red-400"
+          disabled={!pdfUrl}
+          className={`px-10 py-3 rounded-lg text-white ${
+            pdfUrl ? "bg-red-500 hover:bg-red-400" : "bg-red-300 cursor-not-allowed"
+          }`}
         >
           PDF
         </button>
