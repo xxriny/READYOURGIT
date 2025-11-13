@@ -1,5 +1,5 @@
 import { useState } from "react";
-// import readingGif from "../assets/your_gif.gif";  // add later!
+import gitgif from "../assets/git.gif";  // add later!
 
 export default function Home() {
   const [url, setUrl] = useState("");
@@ -71,8 +71,7 @@ export default function Home() {
         <div className="mt-8 bg-white border rounded-xl shadow-lg p-6 w-[350px] text-center">
           {/* Replace this with your GIF later */}
           <div className="w-full flex justify-center mb-2">
-            <div className="w-20 h-20 bg-gray-200 rounded-lg"></div>
-            {/* <img src={readingGif} className="w-20" /> */}
+            { <img src={gitgif} className="w-20" /> }
           </div>
           <p>reading...</p>
         </div>
